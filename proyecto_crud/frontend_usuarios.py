@@ -193,7 +193,7 @@ class UsuarioApp(QMainWindow):
         # Deshabilitar código (no se puede cambiar la PK)
         self.codigo_input.setEnabled(False)
     
-    def guardar_edicion(self):
+    """def guardar_edicion(self):
         if self.usuario_editando is None:
             return
         
@@ -217,6 +217,48 @@ class UsuarioApp(QMainWindow):
                 QMessageBox.warning(self, "Error", f"No se pudo actualizar: {mensaje_error}")
                 
         except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al actualizar usuario: {str(e)}")"""
+            
+    def guardar_edicion(self):
+        if self.usuario_editando is None:
+            return
+        
+        nuevo_nombre = self.nombre_input.text().strip()
+        
+        if not nuevo_nombre:
+            QMessageBox.warning(self, "Nombre vacío", "El nombre no puede estar vacío")
+            return
+        
+        try:
+            data = {"codigo": self.usuario_editando, "nombre": nuevo_nombre}
+            print(f"🔄 DEBUG: Intentando actualizar usuario {self.usuario_editando}")
+            print(f"📦 DEBUG: Datos enviados: {data}")
+            
+            response = requests.put(f"{self.api_url}{self.usuario_editando}/", json=data)
+            
+            print(f"📡 DEBUG: Status code: {response.status_code}")
+            print(f"📄 DEBUG: Response headers: {response.headers}")
+            print(f"🔍 DEBUG: Response content: {response.text}")
+            print(f"🔍 DEBUG: Response encoding: {response.encoding}")
+            
+            # Verificar si la respuesta es JSON válido
+            try:
+                response_json = response.json()
+                print(f"✅ DEBUG: JSON parseado: {response_json}")
+            except:
+                print(f"❌ DEBUG: NO se pudo parsear JSON. Contenido: {response.text}")
+            
+            if response.status_code == 200:
+                self.cargar_usuarios()
+                self.cancelar_edicion()
+                QMessageBox.information(self, "Éxito", "Usuario actualizado correctamente")
+            else:
+                # Mostrar el error real
+                error_text = response.text if response.text else "Error sin mensaje"
+                QMessageBox.warning(self, f"Error {response.status_code}", f"Detalles: {error_text}")
+                
+        except Exception as e:
+            print(f"💥 DEBUG: Excepción: {str(e)}")
             QMessageBox.critical(self, "Error", f"Error al actualizar usuario: {str(e)}")
     
     def eliminar_usuario(self, fila):
